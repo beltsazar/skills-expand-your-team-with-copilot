@@ -494,7 +494,9 @@ document.addEventListener("DOMContentLoaded", () => {
     hasFocusedSharedActivity = true;
     sharedActivityCard.classList.add("shared-activity-highlight");
     sharedActivityCard.scrollIntoView({ behavior: "smooth", block: "center" });
-    showMessage(`You're viewing a shared activity: ${sharedActivityName}`, "info");
+    const sharedActivityLabel =
+      sharedActivityCard.dataset.activityName || "this activity";
+    showMessage(`You're viewing a shared activity: ${sharedActivityLabel}`, "info");
 
     setTimeout(() => {
       sharedActivityCard.classList.remove("shared-activity-highlight");
@@ -528,9 +530,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Format the schedule using the new helper function
     const formattedSchedule = formatSchedule(details);
-    const shareUrl = `${window.location.origin}${window.location.pathname}?activity=${encodeURIComponent(
-      name
-    )}`;
+    const shareUrlObject = new URL(window.location.href);
+    shareUrlObject.searchParams.set("activity", name);
+    const shareUrl = shareUrlObject.toString();
     const shareText = `Check out the ${name} activity at Mergington High School!`;
     const encodedShareUrl = encodeURIComponent(shareUrl);
     const encodedShareText = encodeURIComponent(shareText);
