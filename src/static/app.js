@@ -498,6 +498,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Format the schedule using the new helper function
     const formattedSchedule = formatSchedule(details);
+    const shareUrl = `${window.location.origin}${window.location.pathname}?activity=${encodeURIComponent(
+      name
+    )}`;
+    const shareText = `Check out the ${name} activity at Mergington High School!`;
+    const encodedShareUrl = encodeURIComponent(shareUrl);
+    const encodedShareText = encodeURIComponent(shareText);
 
     // Create activity tag
     const tagHtml = `
@@ -552,6 +558,45 @@ document.addEventListener("DOMContentLoaded", () => {
             .join("")}
         </ul>
       </div>
+      <div class="share-actions" aria-label="Share this activity">
+        <span class="share-label">Share:</span>
+        <div class="share-buttons">
+          <a
+            class="share-button share-facebook"
+            href="https://www.facebook.com/sharer/sharer.php?u=${encodedShareUrl}"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Share ${name} on Facebook"
+          >
+            Facebook
+          </a>
+          <a
+            class="share-button share-x"
+            href="https://twitter.com/intent/tweet?text=${encodedShareText}&url=${encodedShareUrl}"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Share ${name} on X"
+          >
+            X
+          </a>
+          <a
+            class="share-button share-whatsapp"
+            href="https://wa.me/?text=${encodedShareText}%20${encodedShareUrl}"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Share ${name} on WhatsApp"
+          >
+            WhatsApp
+          </a>
+          <button
+            type="button"
+            class="share-button copy-share-button"
+            aria-label="Copy share link for ${name}"
+          >
+            Copy Link
+          </button>
+        </div>
+      </div>
       <div class="activity-card-actions">
         ${
           currentUser
@@ -586,6 +631,29 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       }
     }
+
+    const copyShareButton = activityCard.querySelector(".copy-share-button");
+    copyShareButton.addEventListener("click", async () => {
+      const shareContent = `${shareText} ${shareUrl}`;
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(shareContent);
+        } else {
+          const tempInput = document.createElement("textarea");
+          tempInput.value = shareContent;
+          tempInput.setAttribute("readonly", "");
+          tempInput.style.position = "absolute";
+          tempInput.style.left = "-9999px";
+          document.body.appendChild(tempInput);
+          tempInput.select();
+          document.execCommand("copy");
+          document.body.removeChild(tempInput);
+        }
+        showMessage("Share link copied to clipboard!", "success");
+      } catch (error) {
+        showMessage("Could not copy link. Please copy it manually.", "error");
+      }
+    });
 
     activitiesList.appendChild(activityCard);
   }
