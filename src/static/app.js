@@ -34,7 +34,7 @@ document.addEventListener("DOMContentLoaded", () => {
     technology: { label: "Technology", color: "#e8eaf6", textColor: "#3949ab" },
   };
 
-  function normalizeActivityName(activityName) {
+  function sanitizeActivityName(activityName) {
     return String(activityName || "")
       .replace(/[<>"'`\r\n\t]/g, " ")
       .trim();
@@ -46,7 +46,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let searchQuery = "";
   let currentDay = "";
   let currentTimeRange = "";
-  const sharedActivityName = normalizeActivityName(
+  const sharedActivityName = sanitizeActivityName(
     new URLSearchParams(window.location.search).get("activity") || ""
   );
   let hasFocusedSharedActivity = false;
@@ -515,7 +515,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderActivityCard(name, details) {
     const activityCard = document.createElement("div");
     activityCard.className = "activity-card";
-    const safeActivityName = normalizeActivityName(name);
+    const safeActivityName = sanitizeActivityName(name);
     activityCard.dataset.activityName = safeActivityName;
 
     // Calculate spots and capacity
@@ -688,7 +688,8 @@ document.addEventListener("DOMContentLoaded", () => {
           tempTextarea.style.left = "-9999px";
           document.body.appendChild(tempTextarea);
           tempTextarea.select();
-          // Deprecated fallback kept only for legacy browsers without navigator.clipboard.
+          // Deprecated fallback: keep until support for legacy browsers without
+          // navigator.clipboard is dropped from this project.
           document.execCommand("copy");
           document.body.removeChild(tempTextarea);
         }
