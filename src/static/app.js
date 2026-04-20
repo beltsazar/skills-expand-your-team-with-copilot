@@ -34,14 +34,21 @@ document.addEventListener("DOMContentLoaded", () => {
     technology: { label: "Technology", color: "#e8eaf6", textColor: "#3949ab" },
   };
 
+  function normalizeActivityName(activityName) {
+    return String(activityName || "")
+      .replace(/[<>\r\n\t]/g, " ")
+      .trim();
+  }
+
   // State for activities and filters
   let allActivities = {};
   let currentFilter = "all";
   let searchQuery = "";
   let currentDay = "";
   let currentTimeRange = "";
-  const sharedActivityName =
-    new URLSearchParams(window.location.search).get("activity") || "";
+  const sharedActivityName = normalizeActivityName(
+    new URLSearchParams(window.location.search).get("activity") || ""
+  );
   let hasFocusedSharedActivity = false;
 
   // Authentication state
@@ -507,7 +514,8 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderActivityCard(name, details) {
     const activityCard = document.createElement("div");
     activityCard.className = "activity-card";
-    activityCard.dataset.activityName = name;
+    const safeActivityName = normalizeActivityName(name);
+    activityCard.dataset.activityName = safeActivityName;
 
     // Calculate spots and capacity
     const totalSpots = details.max_participants;
@@ -531,9 +539,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // Format the schedule using the new helper function
     const formattedSchedule = formatSchedule(details);
     const shareUrlObject = new URL(window.location.href);
-    shareUrlObject.searchParams.set("activity", name);
+    shareUrlObject.searchParams.set("activity", safeActivityName);
     const shareUrl = shareUrlObject.toString();
-    const shareText = `Check out the ${name} activity at Mergington High School!`;
+    const shareText = `Check out the ${safeActivityName} activity at Mergington High School!`;
     const encodedShareUrl = encodeURIComponent(shareUrl);
     const encodedShareText = encodeURIComponent(shareText);
 
@@ -598,7 +606,7 @@ document.addEventListener("DOMContentLoaded", () => {
             href="https://www.facebook.com/sharer/sharer.php?u=${encodedShareUrl}"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Share ${name} on Facebook"
+            aria-label="Share ${safeActivityName} on Facebook"
           >
             Facebook
           </a>
@@ -607,7 +615,7 @@ document.addEventListener("DOMContentLoaded", () => {
             href="https://twitter.com/intent/tweet?text=${encodedShareText}&url=${encodedShareUrl}"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Share ${name} on X"
+            aria-label="Share ${safeActivityName} on X"
           >
             X
           </a>
@@ -616,14 +624,14 @@ document.addEventListener("DOMContentLoaded", () => {
             href="https://wa.me/?text=${encodedShareText}%20${encodedShareUrl}"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Share ${name} on WhatsApp"
+            aria-label="Share ${safeActivityName} on WhatsApp"
           >
             WhatsApp
           </a>
           <button
             type="button"
             class="share-button copy-share-button"
-            aria-label="Copy share link for ${name}"
+            aria-label="Copy share link for ${safeActivityName}"
           >
             Copy Link
           </button>
@@ -679,6 +687,7 @@ document.addEventListener("DOMContentLoaded", () => {
           tempTextarea.style.left = "-9999px";
           document.body.appendChild(tempTextarea);
           tempTextarea.select();
+          // Fallback for older browsers that do not support navigator.clipboard.
           document.execCommand("copy");
           document.body.removeChild(tempTextarea);
         }
