@@ -36,7 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function normalizeActivityName(activityName) {
     return String(activityName || "")
-      .replace(/[<>\r\n\t]/g, " ")
+      .replace(/[<>"'`\r\n\t]/g, " ")
       .trim();
   }
 
@@ -501,9 +501,10 @@ document.addEventListener("DOMContentLoaded", () => {
     hasFocusedSharedActivity = true;
     sharedActivityCard.classList.add("shared-activity-highlight");
     sharedActivityCard.scrollIntoView({ behavior: "smooth", block: "center" });
-    const sharedActivityLabel =
-      sharedActivityCard.dataset.activityName || "this activity";
-    showMessage(`You're viewing a shared activity: ${sharedActivityLabel}`, "info");
+    showMessage(
+      `You're viewing a shared activity: ${sharedActivityCard.dataset.activityName}`,
+      "info"
+    );
 
     setTimeout(() => {
       sharedActivityCard.classList.remove("shared-activity-highlight");
@@ -606,7 +607,7 @@ document.addEventListener("DOMContentLoaded", () => {
             href="https://www.facebook.com/sharer/sharer.php?u=${encodedShareUrl}"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Share ${safeActivityName} on Facebook"
+            aria-label="Share on Facebook"
           >
             Facebook
           </a>
@@ -615,7 +616,7 @@ document.addEventListener("DOMContentLoaded", () => {
             href="https://twitter.com/intent/tweet?text=${encodedShareText}&url=${encodedShareUrl}"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Share ${safeActivityName} on X"
+            aria-label="Share on X"
           >
             X
           </a>
@@ -624,14 +625,14 @@ document.addEventListener("DOMContentLoaded", () => {
             href="https://wa.me/?text=${encodedShareText}%20${encodedShareUrl}"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Share ${safeActivityName} on WhatsApp"
+            aria-label="Share on WhatsApp"
           >
             WhatsApp
           </a>
           <button
             type="button"
             class="share-button copy-share-button"
-            aria-label="Copy share link for ${safeActivityName}"
+            aria-label="Copy share link"
           >
             Copy Link
           </button>
@@ -687,7 +688,7 @@ document.addEventListener("DOMContentLoaded", () => {
           tempTextarea.style.left = "-9999px";
           document.body.appendChild(tempTextarea);
           tempTextarea.select();
-          // Fallback for older browsers that do not support navigator.clipboard.
+          // Deprecated fallback kept only for legacy browsers without navigator.clipboard.
           document.execCommand("copy");
           document.body.removeChild(tempTextarea);
         }
