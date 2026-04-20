@@ -38,6 +38,12 @@ document.addEventListener("DOMContentLoaded", () => {
     technology: { label: "Technology", color: "#e8eaf6", textColor: "#3949ab" },
   };
 
+  function sanitizeActivityName(activityName) {
+    return String(activityName || "")
+      .replace(/[<>"'`\r\n\t]/g, " ")
+      .trim();
+  }
+
   // State for activities and filters
   let allActivities = {};
   let currentFilter = "all";
@@ -45,6 +51,10 @@ document.addEventListener("DOMContentLoaded", () => {
   let searchQuery = "";
   let currentDay = "";
   let currentTimeRange = "";
+  const sharedActivityName = sanitizeActivityName(
+    new URLSearchParams(window.location.search).get("activity") || ""
+  );
+  let hasFocusedSharedActivity = false;
 
   // Authentication state
   let currentUser = null;
@@ -518,12 +528,43 @@ document.addEventListener("DOMContentLoaded", () => {
     Object.entries(filteredActivities).forEach(([name, details]) => {
       renderActivityCard(name, details);
     });
+
+    focusSharedActivityCardIfNeeded();
+  }
+
+  function focusSharedActivityCardIfNeeded() {
+    if (!sharedActivityName || hasFocusedSharedActivity) {
+      return;
+    }
+
+    const cards = Array.from(activitiesList.querySelectorAll(".activity-card"));
+    const sharedActivityCard = cards.find(
+      (card) => card.dataset.activityName === sharedActivityName
+    );
+
+    if (!sharedActivityCard) {
+      return;
+    }
+
+    hasFocusedSharedActivity = true;
+    sharedActivityCard.classList.add("shared-activity-highlight");
+    sharedActivityCard.scrollIntoView({ behavior: "smooth", block: "center" });
+    showMessage(
+      `You're viewing a shared activity: ${sharedActivityCard.dataset.activityName}`,
+      "info"
+    );
+
+    setTimeout(() => {
+      sharedActivityCard.classList.remove("shared-activity-highlight");
+    }, 4000);
   }
 
   // Function to render a single activity card
   function renderActivityCard(name, details) {
     const activityCard = document.createElement("div");
     activityCard.className = "activity-card";
+    const safeActivityName = sanitizeActivityName(name);
+    activityCard.dataset.activityName = safeActivityName;
 
     // Calculate spots and capacity
     const totalSpots = details.max_participants;
@@ -607,6 +648,45 @@ document.addEventListener("DOMContentLoaded", () => {
             .join("")}
         </ul>
       </div>
+      <div class="share-actions" aria-label="Share this activity">
+        <span class="share-label">Share:</span>
+        <div class="share-buttons">
+          <a
+            class="share-button share-facebook"
+            href="https://www.facebook.com/sharer/sharer.php?u=${encodedShareUrl}"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Share on Facebook"
+          >
+            Facebook
+          </a>
+          <a
+            class="share-button share-x"
+            href="https://twitter.com/intent/tweet?text=${encodedShareText}&url=${encodedShareUrl}"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Share on X"
+          >
+            X
+          </a>
+          <a
+            class="share-button share-whatsapp"
+            href="https://wa.me/?text=${encodedShareText}%20${encodedShareUrl}"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Share on WhatsApp"
+          >
+            WhatsApp
+          </a>
+          <button
+            type="button"
+            class="share-button copy-share-button"
+            aria-label="Copy share link"
+          >
+            Copy Link
+          </button>
+        </div>
+      </div>
       <div class="activity-card-actions">
         ${
           currentUser
@@ -641,6 +721,40 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       }
     }
+
+    const copyShareButton = activityCard.querySelector(".copy-share-button");
+    copyShareButton.addEventListener("click", async () => {
+      const shareContent = `${shareText} ${shareUrl}`;
+      const originalButtonLabel = copyShareButton.textContent;
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(shareContent);
+        } else {
+          const tempTextarea = document.createElement("textarea");
+          tempTextarea.value = shareContent;
+          tempTextarea.setAttribute("readonly", "");
+          tempTextarea.style.position = "absolute";
+          tempTextarea.style.left = "-9999px";
+          document.body.appendChild(tempTextarea);
+          tempTextarea.select();
+          // Deprecated fallback: keep until support for legacy browsers without
+          // navigator.clipboard is dropped from this project.
+          document.execCommand("copy");
+          document.body.removeChild(tempTextarea);
+        }
+        copyShareButton.textContent = "Copied!";
+        copyShareButton.classList.add("copied");
+        showMessage("Share link copied to clipboard!", "success");
+      } catch (error) {
+        copyShareButton.textContent = "Try Again";
+        showMessage("Could not copy link. Please copy it manually.", "error");
+      } finally {
+        setTimeout(() => {
+          copyShareButton.textContent = originalButtonLabel;
+          copyShareButton.classList.remove("copied");
+        }, 1500);
+      }
+    });
 
     activitiesList.appendChild(activityCard);
   }
