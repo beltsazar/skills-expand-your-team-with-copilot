@@ -169,6 +169,11 @@ section h3 {
   border-color: var(--border-focus);
 }
 
+.activity-card.shared-activity-highlight {
+  border-color: var(--primary-light);
+  box-shadow: 0 0 0 3px rgba(83, 75, 174, 0.2);
+}
+
 .activity-card h4 {
   margin-bottom: 8px;
   color: var(--primary);
@@ -225,6 +230,12 @@ section h3 {
   background-color: var(--primary-light);
   border-color: var(--primary-light);
   color: var(--primary-text);
+}
+
+.share-button.copied {
+  background-color: var(--success);
+  border-color: var(--success);
+  color: white;
 }
 
 /* Activity Tag */

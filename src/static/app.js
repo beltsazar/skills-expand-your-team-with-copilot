@@ -40,6 +40,9 @@ document.addEventListener("DOMContentLoaded", () => {
   let searchQuery = "";
   let currentDay = "";
   let currentTimeRange = "";
+  const sharedActivityName =
+    new URLSearchParams(window.location.search).get("activity") || "";
+  let hasFocusedSharedActivity = false;
 
   // Authentication state
   let currentUser = null;
@@ -470,12 +473,39 @@ document.addEventListener("DOMContentLoaded", () => {
     Object.entries(filteredActivities).forEach(([name, details]) => {
       renderActivityCard(name, details);
     });
+
+    focusSharedActivityCardIfNeeded();
+  }
+
+  function focusSharedActivityCardIfNeeded() {
+    if (!sharedActivityName || hasFocusedSharedActivity) {
+      return;
+    }
+
+    const cards = Array.from(activitiesList.querySelectorAll(".activity-card"));
+    const sharedActivityCard = cards.find(
+      (card) => card.dataset.activityName === sharedActivityName
+    );
+
+    if (!sharedActivityCard) {
+      return;
+    }
+
+    hasFocusedSharedActivity = true;
+    sharedActivityCard.classList.add("shared-activity-highlight");
+    sharedActivityCard.scrollIntoView({ behavior: "smooth", block: "center" });
+    showMessage(`You're viewing a shared activity: ${sharedActivityName}`, "info");
+
+    setTimeout(() => {
+      sharedActivityCard.classList.remove("shared-activity-highlight");
+    }, 4000);
   }
 
   // Function to render a single activity card
   function renderActivityCard(name, details) {
     const activityCard = document.createElement("div");
     activityCard.className = "activity-card";
+    activityCard.dataset.activityName = name;
 
     // Calculate spots and capacity
     const totalSpots = details.max_participants;
@@ -635,23 +665,32 @@ document.addEventListener("DOMContentLoaded", () => {
     const copyShareButton = activityCard.querySelector(".copy-share-button");
     copyShareButton.addEventListener("click", async () => {
       const shareContent = `${shareText} ${shareUrl}`;
+      const originalButtonLabel = copyShareButton.textContent;
       try {
         if (navigator.clipboard && navigator.clipboard.writeText) {
           await navigator.clipboard.writeText(shareContent);
         } else {
-          const tempInput = document.createElement("textarea");
-          tempInput.value = shareContent;
-          tempInput.setAttribute("readonly", "");
-          tempInput.style.position = "absolute";
-          tempInput.style.left = "-9999px";
-          document.body.appendChild(tempInput);
-          tempInput.select();
+          const tempTextarea = document.createElement("textarea");
+          tempTextarea.value = shareContent;
+          tempTextarea.setAttribute("readonly", "");
+          tempTextarea.style.position = "absolute";
+          tempTextarea.style.left = "-9999px";
+          document.body.appendChild(tempTextarea);
+          tempTextarea.select();
           document.execCommand("copy");
-          document.body.removeChild(tempInput);
+          document.body.removeChild(tempTextarea);
         }
+        copyShareButton.textContent = "Copied!";
+        copyShareButton.classList.add("copied");
         showMessage("Share link copied to clipboard!", "success");
       } catch (error) {
+        copyShareButton.textContent = "Try Again";
         showMessage("Could not copy link. Please copy it manually.", "error");
+      } finally {
+        setTimeout(() => {
+          copyShareButton.textContent = originalButtonLabel;
+          copyShareButton.classList.remove("copied");
+        }, 1500);
       }
     });
 
